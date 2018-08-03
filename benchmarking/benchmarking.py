@@ -3,6 +3,7 @@ from itertools import product
 import pandas as pd
 import numpy as np
 import seaborn as sns
+from tqdm import tqdm
 
 #TODO add multiprocess support
 
@@ -42,7 +43,7 @@ def benchmark_function(param_grid, function, param_names, n_times=100):
     param_names += ['runtime', 'num_execution']
     opt_tuples = list(product(*param_grid))
     data = { k : [] for k in param_names }
-    for opt_tuple in opt_tuples:
+    for opt_tuple in tqdm(opt_tuples):
             for i in range(n_times):
                 args = opt_tuple
                 for k, v in zip(param_names, opt_tuple):
@@ -57,7 +58,7 @@ def benchmark_function(param_grid, function, param_names, n_times=100):
 if __name__ == '__main__':
     def func(N, pow):
         import time
-        time.sleep(float(pow) / 100)
+        time.sleep(float(pow) / 10000 * N)
         return np.arange(N) ** pow
 
 
@@ -67,15 +68,16 @@ if __name__ == '__main__':
     ]
     param_names = ['N', 'powers']
 
-    df = benchmark_function(param_grid, func, param_names, n_times=1)
+    df = benchmark_function(param_grid, func, param_names, n_times=10)
     df.to_csv('benchmark.csv')
 
     g = sns.FacetGrid(df, col='N', row='powers', sharex=False)
     g = g.map(sns.distplot, 'runtime', hist=True, kde=False)
-    g.savefig('example_benchmark.png')
+    g.fig.savefig('example_benchmark.png')
 
     df2 = df.groupby(['N', 'powers']).mean().reset_index().drop('num_execution', 1)
     from pylab import *
+    plt.style.use('seaborn')
 
     fig, ax = plt.subplots()
     df2.groupby('powers').plot(x='N', y='runtime', subplots=True, ax=ax, legend=True)
