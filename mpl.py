@@ -1,9 +1,7 @@
-import matplotlib as mpl
 from matplotlib import pyplot as plt
 import numpy as np
 import pickle as pl
 import os
-import sklearn
 from itertools import product
 
 plt.style.use('seaborn')
@@ -22,7 +20,9 @@ sample_data = {
     'label1' : np.random.randint(2, 10, size=(10)),
     'label2' : np.random.randint(2, 10, size=(10)).astype(np.float)/ 100,
 }
-sample_data = {key: (val, None) for key, val in sample_data.iteritems()}
+
+sample_data = {key: (val, None) for key, val in sample_data.items()}
+# sample_data = {key: (val, None) for key, val in sample_data.iteritems()} # works only in python 2.7
 
 
 # TODO add usages
@@ -80,8 +80,18 @@ def barplot(fig=None, ax=None, data_dict=sample_data, height_text=True, bar_spac
 
 # TODO move this code to public repository
 class FigSaver():
-    def __init__(self, save_dir='.', plt_savefig_format='png', plt_savefig_kwargs={'dpi' : 250}):
+    def __init__(self, save_dir='.', plt_savefig_format='png', plt_savefig_kwargs={'dpi' : 250},
+                 adjust_path=True):
+        '''
+        plt_savefig_kwargs are passed through to plt.savefig
+        if adjust_path is True, a number is put at the beginning of the fname
+        :param save_dir:
+        :param plt_savefig_format:
+        :param plt_savefig_kwargs:
+        :param adjust_path:
+        '''
         self._save_dir = save_dir
+        self.adjust_path=adjust_path
         self._cur_fig_num = 0
         self._plt_savefig_kwargs=plt_savefig_kwargs
         self._plt_savefig_format = plt_savefig_format
@@ -89,14 +99,16 @@ class FigSaver():
     def save_fig(self, fig, fname=''):
         '''
 
-        :param fig:
+        :param fig: figure handle. use plt.gcf() maybe
         :param fname: file name without extension. will automatically get an ordering number beforehand
         :return:
         '''
-        fname = '{:02d}_{}'.format(self._cur_fig_num, fname)
+        if self.adjust_path:
+            fname = '{:02d}_{}'.format(self._cur_fig_num, fname)
         pkl_fname = os.path.join(self._save_dir, '{}.{}'.format(fname, 'pickle'))
         plt_savefig_fname = os.path.join(self._save_dir, '{}.{}'.format(fname, self._plt_savefig_format))
-        pl.dump(fig, file(pkl_fname, 'w')) # this might only work for python 2.7
+        f = open(pkl_fname, 'wb')
+        pl.dump(fig, f) # this might only work for python 2.7
         plt.savefig(plt_savefig_fname, **self._plt_savefig_kwargs)
         return self
 
