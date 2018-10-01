@@ -3,7 +3,7 @@ import glob
 import click
 
 @click.command()
-@click.argument('file_ext', help='image file extension like .jpg or .png')
+@click.argument('file_ext')
 @click.option('--duration', default=0.5, type=float, help='frame duration')
 def main(file_ext, duration):
     filenames = sorted(glob.glob('*' + file_ext))
